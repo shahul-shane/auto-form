@@ -43,6 +43,24 @@ for index, row in df.iterrows():
         WebDriverWait(driver, 15).until(
             EC.presence_of_element_located((By.XPATH, "//form"))
         )
+                # === Fill Email ===
+        email_value = str(row.get("Email", "")).strip()
+
+        if not email_value or email_value.lower() == "nan":
+            email_value = simpledialog.askstring(
+                title="Manual Email Required",
+                prompt=f"Enter Email for row {index + 1}:"
+            )
+
+        # Adjust this if the email field is NOT type='email'
+        try:
+            email_input = driver.find_element(By.XPATH, "//input[@type='email']")
+        except:
+            email_input = driver.find_element(By.XPATH, "(//input[@type='text'])[1]")
+
+        email_input.send_keys(email_value)
+        print(f"✅ Filled Email with: {email_value}")
+
 
         # === Fill Date ===
         session_date = datetime.now().strftime("%m/%d/%Y")
@@ -64,6 +82,20 @@ for index, row in df.iterrows():
         print(f"✅ Filled Total attendees with: {attendees_value}")
         time.sleep(1)
 
+        # === Ratings Less Than 4 ===
+        ratings_raw = row.get("How many ratings less than 4 for today's session? (in any category)", "")
+        ratings_value = str(ratings_raw).strip()
+
+        if not ratings_value or ratings_value.lower() == "nan":
+            ratings_value = simpledialog.askstring(
+                title="Manual Input Required",
+                prompt=f"Enter number of ratings < 4 for row {index + 1}:"
+            )
+
+        ratings_input = driver.find_element(By.XPATH, "(//textarea)[3]/following::input[@type='text'][2]")
+        ratings_input.send_keys(ratings_value)
+        print(f"✅ Filled Ratings < 4 with: {ratings_value}")
+        time.sleep(1)
 
         # === Comments ===
         driver.find_element(By.XPATH, "(//textarea)[4]").send_keys(str(row["Comments"]))
@@ -120,3 +152,4 @@ driver.quit()
 # Save Excel with updated status
 df.to_excel(file_path, index=False)
 print(f"\n📄 Excel updated with new column: {timestamp}")
+ # type: ignore
